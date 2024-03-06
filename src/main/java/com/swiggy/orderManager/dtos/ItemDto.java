@@ -1,5 +1,6 @@
 package com.swiggy.orderManager.dtos;
 
+import jakarta.persistence.Embeddable;
 import lombok.Data;
 
 @Data
