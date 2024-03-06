@@ -1,7 +1,7 @@
 package com.swiggy.orderManager.entities;
 
 import com.swiggy.orderManager.enums.OrderStatus;
-import com.swiggy.orderManager.exceptions.ItemOutOfStock;
+import com.swiggy.orderManager.exceptions.ItemDoesNotBelongToGivenRestaurant;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
@@ -21,22 +21,25 @@ import java.util.Map;
 public class Order {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    int id;
+    private int id;
 
     @Column(nullable = false, updatable = false)
-    int customerId;
+    private int customerId;
 
     @NotNull
-    int deliveryLocationPincode;
+    private int deliveryLocationPincode;
 
     @NotNull
-    Map<Integer, Integer> items; // id -> quantity
+    private Map<Integer, Integer> items; // id -> quantity
+
+    @NotNull
+    private int restaurantId;
 
     @Enumerated(EnumType.STRING)
-    OrderStatus status;
+    private OrderStatus status;
 
     @Nullable
-    int allocatedDeliveryAgentId;
+    private int allocatedDeliveryAgentId;
 
     @CreatedDate
     private LocalDateTime timestamp;
@@ -45,18 +48,18 @@ public class Order {
             @AttributeOverride(name = "amount", column = @Column(name = "netPriceValue")),
             @AttributeOverride(name = "currency", column = @Column(name = "netPriceCurrency"))
     })
-    Money netPrice;
+    private Money netPrice;
 
-    public Order(int customerId, Map<Integer, Integer> items) throws ItemOutOfStock {
+    public Order(int customerId, Map<Integer, Integer> items) throws ItemDoesNotBelongToGivenRestaurant {
         this.customerId = customerId;
         this.items = items;
-        checkItemsAreInStockAndCalculateNetPrice();
+        checkItemsBelongToGivenRestaurantAndCalculateNetPrice();
         obtainDeliveryLocation();
 
         this.status = OrderStatus.CREATED;
     }
 
-    private void checkItemsAreInStockAndCalculateNetPrice() throws ItemOutOfStock {
+    private void checkItemsBelongToGivenRestaurantAndCalculateNetPrice() throws ItemDoesNotBelongToGivenRestaurant {
 
     }
 

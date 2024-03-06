@@ -1,8 +1,16 @@
 package com.swiggy.orderManager.constants;
 
-import java.util.function.Consumer;
 import java.util.function.Function;
 
 public class ErrorMessages {
-    public static final Function<Integer, String> ITEM_OUT_OF_STOCK = (Integer id) -> "Item with id "+id+" is out of stock at the moment. Cannot process order.";
+    public static class GroupedIds {
+        public final int itemId, restaurantId;
+
+        public GroupedIds(int itemId, int restaurantId) {
+            this.itemId = itemId;
+            this.restaurantId = restaurantId;
+        }
+    }
+    public static final Function<GroupedIds, String> ITEM_NOT_OF_GIVEN_RESTAURANT = (GroupedIds group) -> "Item with id "+group.itemId+" is does not belong to the given restaurant with id "+group.restaurantId+". Cannot process order.";
+    public static final String ADDITION_CURRENCY_CONFLICT = "Adding money with different currency.";
 }
