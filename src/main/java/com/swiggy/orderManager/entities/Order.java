@@ -1,5 +1,6 @@
 package com.swiggy.orderManager.entities;
 
+import com.swiggy.orderManager.dtos.ItemDto;
 import com.swiggy.orderManager.enums.OrderStatus;
 import com.swiggy.orderManager.exceptions.ItemDoesNotBelongToGivenRestaurant;
 import jakarta.annotation.Nullable;
@@ -11,7 +12,7 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
-import java.util.Map;
+import java.util.List;
 
 @Entity
 @EntityListeners(AuditingEntityListener.class)
@@ -30,7 +31,7 @@ public class Order {
     private int deliveryLocationPincode;
 
     @NotNull
-    private Map<Integer, Integer> items; // id -> quantity
+    private List<ItemDto> items; // id -> quantity
 
     @NotNull
     private int restaurantId;
@@ -50,11 +51,12 @@ public class Order {
     })
     private Money netPrice;
 
-    public Order(int customerId, Map<Integer, Integer> items) throws ItemDoesNotBelongToGivenRestaurant {
+    private Order(int customerId, List<ItemDto> items) throws ItemDoesNotBelongToGivenRestaurant {
         this.customerId = customerId;
         this.items = items;
         checkItemsBelongToGivenRestaurantAndCalculateNetPrice();
         obtainDeliveryLocation();
+        allocateDeliverer();
 
         this.status = OrderStatus.CREATED;
     }
@@ -64,9 +66,21 @@ public class Order {
     }
 
     public void obtainDeliveryLocation(){
-
+        // fetch customer
+        // get their location
     }
 
 
-    public void allocateDeliverer(){}
+    public void allocateDeliverer(){
+        new Thread(()->{
+            /*
+             * allocation logic
+             * */
+            this.status = OrderStatus.ASSIGNED;
+        });
+    }
+
+    public static Order create(int customerId, List<ItemDto> items){
+        return new Order(customerId, items);
+    }
 }
