@@ -3,9 +3,7 @@ package com.swiggy.orderManager.entities;
 import com.swiggy.orderManager.dtos.ItemDto;
 import com.swiggy.orderManager.enums.OrderStatus;
 import com.swiggy.orderManager.exceptions.ItemRestaurantConflict;
-import jakarta.annotation.Nullable;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -73,13 +71,13 @@ public class Order {
 
     }
 
-    public void obtainDeliveryLocation(){
+    private void obtainDeliveryLocation(){
         // fetch customer
         // get their location
     }
 
 
-    public void allocateDeliverer(){
+    private void allocateDeliverer(){
         new Thread(()->{
             /*
              * allocation logic
