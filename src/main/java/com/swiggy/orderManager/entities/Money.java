@@ -1,15 +1,10 @@
 package com.swiggy.orderManager.entities;
 
 import com.swiggy.orderManager.enums.Currency;
-import com.swiggy.orderManager.exceptions.AdditionBetweenDifferentCurrencies;
-import com.swiggy.orderManager.exceptions.UnsupportedCurrency;
+import com.swiggy.orderManager.exceptions.AdditionBetweenDifferentCurrenciesException;
 import jakarta.persistence.Embeddable;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-
-import java.util.Arrays;
 
 @Data
 @Embeddable
@@ -18,7 +13,15 @@ public class Money {
     private double amount;
     private Currency currency;
     public void add(Money money){
-        if (money.currency != this.currency) throw new AdditionBetweenDifferentCurrencies();
+        if (money.currency != this.currency) throw new AdditionBetweenDifferentCurrenciesException();
         this.amount += money.amount;
+    }
+
+    @Override
+    public boolean equals(Object o){
+        if (o == this) return true;
+        if (o==null || ! (o instanceof Money)) return false;
+        Money money = (Money) o;
+        return money.amount == this.amount && money.currency == this.currency;
     }
 }
