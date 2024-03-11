@@ -6,6 +6,7 @@ import com.swiggy.orderManager.dtos.MenuItemDto;
 import com.swiggy.orderManager.enums.OrderStatus;
 import com.swiggy.orderManager.exceptions.InvalidRestaurantIdException;
 import com.swiggy.orderManager.exceptions.ItemRestaurantConflictException;
+import com.swiggy.orderManager.exceptions.NoItemOrderedException;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -13,7 +14,6 @@ import lombok.Setter;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
@@ -62,6 +62,7 @@ public class Order {
     private Money netPrice = null;
 
     private Order(int customerId, int restaurantId, List<ItemDto> items) throws ItemRestaurantConflictException, InvalidRestaurantIdException {
+        if (items.isEmpty()) throw new NoItemOrderedException();
         this.items = new HashMap<>();
         items.forEach(item->this.items.put(item.getItemId(), item.getQuantity()));
         this.customerId = customerId;
