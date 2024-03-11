@@ -37,7 +37,7 @@ public class Order {
     private int deliveryLocationPincode;
 
     @ElementCollection(fetch = FetchType.LAZY)
-    @CollectionTable(name = "orderedItems", joinColumns = @JoinColumn(name = "orderItemsId"))
+    @CollectionTable(name = "orderedItems", joinColumns = @JoinColumn(name = "orderId"))
     @MapKeyColumn(name = "itemId")
     @Column(name = "itemQuantity")
     private Map<Integer, Integer> items; // id -> quantity
@@ -77,6 +77,7 @@ public class Order {
         CATALOGUE_SERVICE_ADAPTER.checkRestaurantExists(this.restaurantId);
         for (Map.Entry<Integer,Integer> entry : this.items.entrySet()) {
                 MenuItemDto item = CATALOGUE_SERVICE_ADAPTER.fetchMenuItem(entry.getKey(), this.restaurantId);
+                System.out.println("item: "+item);
                 if (this.netPrice == null){
                     this.netPrice = item.getPrice();
                 } else {
