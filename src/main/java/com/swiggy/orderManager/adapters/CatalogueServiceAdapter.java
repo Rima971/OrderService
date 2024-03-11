@@ -1,70 +1,61 @@
 package com.swiggy.orderManager.adapters;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.swiggy.orderManager.dtos.GenericHttpResponse;
 import com.swiggy.orderManager.dtos.MenuItemDto;
+import com.swiggy.orderManager.exceptions.InexistentMenuItemException;
+import com.swiggy.orderManager.exceptions.InvalidRestaurantIdException;
+import com.swiggy.orderManager.exceptions.ItemRestaurantConflictException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.RestTemplate;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
 import java.net.URI;
-import java.net.URL;
+import java.util.Objects;
 import java.util.function.Function;
+
+import static com.swiggy.orderManager.constants.ErrorMessage.*;
+
 @Component
 public class CatalogueServiceAdapter {
+    @Autowired
+    private ObjectMapper objectMapper;
 
-//    private static final String USER_AGENT = "Mozilla/5.0";
+    private final RestTemplate restTemplate = new RestTemplate();
 
-    private static final String RESTAURANTS_RESOURCE_URL = "https://localhost:8090/api/restaurants/";
-    private static final Function<Integer, String> MENU_ITEMS_RESOURCE_URL = (Integer restaurantId) -> "https://localhost:8090/api/restaurants/"+restaurantId+"/menu-items/";
+    private static final String RESTAURANTS_RESOURCE_URL = "http://localhost:8080/api/restaurants/";
+    private static final Function<Integer, String> MENU_ITEMS_RESOURCE_URL = (Integer restaurantId) -> "http://localhost:8080/api/restaurants/"+restaurantId+"/menu-items/";
 
-    public Boolean restaurantExists(int restaurantId) throws IOException {
-        URL obj = URI.create(RESTAURANTS_RESOURCE_URL+restaurantId).toURL();
-        HttpURLConnection con = (HttpURLConnection) obj.openConnection();
-        con.setRequestMethod("GET");
-//        con.setRequestProperty("User-Agent", USER_AGENT);
-        int responseCode = con.getResponseCode();
-        System.out.println("GET Response Code :: " + responseCode);
-        if (responseCode == HttpURLConnection.HTTP_OK) { // success
-            BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
-            String inputLine;
-            StringBuffer response = new StringBuffer();
-
-            while ((inputLine = in.readLine()) != null) {
-                response.append(inputLine);
+    public void checkRestaurantExists(int restaurantId) {
+        URI url = URI.create(RESTAURANTS_RESOURCE_URL+restaurantId);
+        try{
+            this.restTemplate.getForObject(url, GenericHttpResponse.class);
+        } catch (HttpClientErrorException e){
+            if (e.getStatusCode() == HttpStatus.CONFLICT){
+                throw new InvalidRestaurantIdException();
             }
-            in.close();
-
-            // print result
-            System.out.println(response.toString());
-        } else {
-            System.out.println("GET request did not work.");
+            throw e;
         }
-        return true;
     }
 
-    public MenuItemDto fetchMenuItem(int itemId, int restaurantId) throws IOException {
-        URL obj = URI.create(MENU_ITEMS_RESOURCE_URL.apply(restaurantId)+itemId).toURL();
-        HttpURLConnection con = (HttpURLConnection) obj.openConnection();
-        con.setRequestMethod("GET");
-//        con.setRequestProperty("User-Agent", USER_AGENT);
-        int responseCode = con.getResponseCode();
-        System.out.println("GET Response Code :: " + responseCode);
-        if (responseCode == HttpURLConnection.HTTP_OK) { // success
-            BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
-            String inputLine;
-            StringBuffer response = new StringBuffer();
-
-            while ((inputLine = in.readLine()) != null) {
-                response.append(inputLine);
+    public MenuItemDto fetchMenuItem(int itemId, int restaurantId) throws InexistentMenuItemException, ItemRestaurantConflictException {
+        URI url = URI.create(MENU_ITEMS_RESOURCE_URL.apply(restaurantId)+itemId);
+        try{
+            GenericHttpResponse response = this.restTemplate.getForObject(url, GenericHttpResponse.class);
+            assert response != null;
+            return this.objectMapper.convertValue(response.getData(), MenuItemDto.class);
+        } catch (HttpClientErrorException e){
+            if (e.getStatusCode() == HttpStatus.CONFLICT){
+                if (Objects.equals(e.getMessage(), MENU_ITEM_NOT_FOUND)){
+                    throw new InexistentMenuItemException();
+                } else if (Objects.equals(e.getMessage(), ITEM_NOT_OF_GIVEN_RESTAURANT.apply(new GroupedIds(itemId, restaurantId)))){
+                    throw new ItemRestaurantConflictException(itemId, restaurantId);
+                }
+                throw e;
             }
-            in.close();
-
-            // print result
-            System.out.println(response.toString());
-        } else {
-            System.out.println("GET request did not work.");
         }
-        return new MenuItemDto();
+        throw new InexistentMenuItemException();
     }
 }
