@@ -4,8 +4,8 @@ import com.swiggy.orderManager.adapters.CatalogueServiceAdapter;
 import com.swiggy.orderManager.dtos.ItemDto;
 import com.swiggy.orderManager.dtos.MenuItemDto;
 import com.swiggy.orderManager.enums.OrderStatus;
-import com.swiggy.orderManager.exceptions.InvalidRestaurantId;
-import com.swiggy.orderManager.exceptions.ItemRestaurantConflict;
+import com.swiggy.orderManager.exceptions.InvalidRestaurantIdException;
+import com.swiggy.orderManager.exceptions.ItemRestaurantConflictException;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -25,6 +25,7 @@ import java.util.Map;
 @Data
 @NoArgsConstructor
 public class Order {
+    private static CatalogueServiceAdapter CATALOGUE_SERVICE_ADAPTER = new CatalogueServiceAdapter();
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
@@ -60,7 +61,7 @@ public class Order {
     })
     private Money netPrice = null;
 
-    private Order(int customerId, int restaurantId, List<ItemDto> items) throws ItemRestaurantConflict,InvalidRestaurantId, IOException {
+    private Order(int customerId, int restaurantId, List<ItemDto> items) throws ItemRestaurantConflictException, InvalidRestaurantIdException {
         this.items = new HashMap<>();
         items.forEach(item->this.items.put(item.getItemId(), item.getQuantity()));
         this.customerId = customerId;
@@ -72,23 +73,15 @@ public class Order {
         this.status = OrderStatus.CREATED;
     }
 
-    private void checkItemsBelongToGivenRestaurantAndCalculateNetPrice() throws ItemRestaurantConflict, InvalidRestaurantId, IOException {
-        CatalogueServiceAdapter catalogueService = new CatalogueServiceAdapter();
-        if (!catalogueService.restaurantExists(this.restaurantId)) {
-            throw new InvalidRestaurantId();
-        }
+    private void checkItemsBelongToGivenRestaurantAndCalculateNetPrice() throws ItemRestaurantConflictException, InvalidRestaurantIdException {
+        CATALOGUE_SERVICE_ADAPTER.checkRestaurantExists(this.restaurantId);
         for (Map.Entry<Integer,Integer> entry : this.items.entrySet()) {
-            try{
-                MenuItemDto item = catalogueService.fetchMenuItem(entry.getKey(), this.restaurantId);
+                MenuItemDto item = CATALOGUE_SERVICE_ADAPTER.fetchMenuItem(entry.getKey(), this.restaurantId);
                 if (this.netPrice == null){
                     this.netPrice = item.getPrice();
                 } else {
                     this.netPrice.add(item.getPrice());
                 }
-            } catch (Exception e){
-                // catch specific exception: resource not found
-                throw new ItemRestaurantConflict(entry.getKey(), this.restaurantId);
-            }
         }
     }
 
@@ -107,7 +100,11 @@ public class Order {
         });
     }
 
-    public static Order create(int customerId, int restaurantId, List<ItemDto> items) throws ItemRestaurantConflict, InvalidRestaurantId, IOException {
+    public static Order create(int customerId, int restaurantId, List<ItemDto> items) throws ItemRestaurantConflictException, InvalidRestaurantIdException {
         return new Order(customerId, restaurantId, items);
+    }
+
+    public static void setCatalogueServiceAdapter(CatalogueServiceAdapter adapter){
+        CATALOGUE_SERVICE_ADAPTER = adapter;
     }
 }

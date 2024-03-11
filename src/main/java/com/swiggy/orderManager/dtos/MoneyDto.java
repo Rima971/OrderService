@@ -1,7 +1,7 @@
 package com.swiggy.orderManager.dtos;
 
 import com.swiggy.orderManager.enums.Currency;
-import com.swiggy.orderManager.exceptions.UnsupportedCurrency;
+import com.swiggy.orderManager.exceptions.UnsupportedCurrencyException;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
@@ -17,8 +17,8 @@ public class MoneyDto {
     @NotNull(message = "money currency is required")
     Currency currency;
 
-    public MoneyDto(double amount, String currency) throws UnsupportedCurrency {
-        if (!Arrays.stream(Currency.values()).anyMatch(c-> c.name().equals(currency))) throw new UnsupportedCurrency();
+    public MoneyDto(double amount, String currency) throws UnsupportedCurrencyException {
+        if (!Arrays.stream(Currency.values()).anyMatch(c-> c.name().equals(currency))) throw new UnsupportedCurrencyException();
         this.amount = amount;
         this.currency = Currency.valueOf(currency);
     }
