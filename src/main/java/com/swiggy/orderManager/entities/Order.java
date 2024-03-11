@@ -60,10 +60,11 @@ public class Order {
     })
     private Money netPrice = null;
 
-    private Order(int customerId, List<ItemDto> items) throws ItemRestaurantConflict,InvalidRestaurantId, IOException {
+    private Order(int customerId, int restaurantId, List<ItemDto> items) throws ItemRestaurantConflict,InvalidRestaurantId, IOException {
         this.items = new HashMap<>();
         items.forEach(item->this.items.put(item.getItemId(), item.getQuantity()));
         this.customerId = customerId;
+        this.restaurantId = restaurantId;
         checkItemsBelongToGivenRestaurantAndCalculateNetPrice();
         obtainDeliveryLocation();
         allocateDeliverer();
@@ -106,7 +107,7 @@ public class Order {
         });
     }
 
-    public static Order create(int customerId, List<ItemDto> items) throws ItemRestaurantConflict, InvalidRestaurantId, IOException {
-        return new Order(customerId, items);
+    public static Order create(int customerId, int restaurantId, List<ItemDto> items) throws ItemRestaurantConflict, InvalidRestaurantId, IOException {
+        return new Order(customerId, restaurantId, items);
     }
 }
