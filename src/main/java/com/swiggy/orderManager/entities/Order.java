@@ -109,4 +109,8 @@ public class Order {
     public static void setCatalogueServiceAdapter(CatalogueServiceAdapter adapter){
         CATALOGUE_SERVICE_ADAPTER = adapter;
     }
+
+    public static void setAllocatorServiceAdapter(AllocatorServiceAdapter adapter){
+        ALLOCATOR_SERVICE_ADAPTER = adapter;
+    }
 }

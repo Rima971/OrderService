@@ -16,12 +16,4 @@ public class Money {
         if (money.currency != this.currency) throw new AdditionBetweenDifferentCurrenciesException();
         this.amount += money.amount;
     }
-
-    @Override
-    public boolean equals(Object o){
-        if (o == this) return true;
-        if (o==null || ! (o instanceof Money)) return false;
-        Money money = (Money) o;
-        return money.amount == this.amount && money.currency == this.currency;
-    }
 }
