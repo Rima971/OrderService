@@ -97,7 +97,7 @@ public class Order {
 
     private void allocateDeliverer(){
         new Thread(()->{
-            this.allocatedDeliveryAgentId = ALLOCATOR_SERVICE_ADAPTER.allocate().getId();
+            this.allocatedDeliveryAgentId = ALLOCATOR_SERVICE_ADAPTER.allocate(this.deliveryLocationPincode).getId();
             this.status = OrderStatus.ASSIGNED;
         }).start();
     }
