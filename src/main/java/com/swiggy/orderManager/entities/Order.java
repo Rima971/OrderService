@@ -1,5 +1,6 @@
 package com.swiggy.orderManager.entities;
 
+import com.swiggy.orderManager.adapters.AllocatorServiceAdapter;
 import com.swiggy.orderManager.adapters.CatalogueServiceAdapter;
 import com.swiggy.orderManager.dtos.ItemDto;
 import com.swiggy.orderManager.dtos.MenuItemDto;
@@ -26,6 +27,7 @@ import java.util.Map;
 @NoArgsConstructor
 public class Order {
     private static CatalogueServiceAdapter CATALOGUE_SERVICE_ADAPTER = new CatalogueServiceAdapter();
+    private static AllocatorServiceAdapter ALLOCATOR_SERVICE_ADAPTER = new AllocatorServiceAdapter();
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
@@ -69,9 +71,9 @@ public class Order {
         this.restaurantId = restaurantId;
         checkItemsBelongToGivenRestaurantAndCalculateNetPrice();
         obtainDeliveryLocation();
-        allocateDeliverer();
-
         this.status = OrderStatus.CREATED;
+
+        allocateDeliverer();
     }
 
     private void checkItemsBelongToGivenRestaurantAndCalculateNetPrice() throws ItemRestaurantConflictException, InvalidRestaurantIdException {
@@ -95,11 +97,9 @@ public class Order {
 
     private void allocateDeliverer(){
         new Thread(()->{
-            /*
-             * allocation logic
-             * */
+            this.allocatedDeliveryAgentId = ALLOCATOR_SERVICE_ADAPTER.allocate().getId();
             this.status = OrderStatus.ASSIGNED;
-        });
+        }).start();
     }
 
     public static Order create(int customerId, int restaurantId, List<ItemDto> items) throws ItemRestaurantConflictException, InvalidRestaurantIdException {

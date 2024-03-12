@@ -1,0 +1,21 @@
+syntax = "proto3";
+option java_multiple_files = true;
+package deliveryAgentAllocator;
+
+message DeliveryAgent {
+  int32 id = 1;
+  int32 userId = 2;
+  int32 currentLocationPincode = 3;
+}
+
+message AllocatorRequest {
+  int32 deliveryLocationPincode = 1;
+}
+
+message AllocatorResponse {
+  DeliveryAgent deliveryAgent = 1;
+}
+
+service DeliveryAgentAllocatorService {
+  rpc allocate(AllocatorRequest) returns (AllocatorResponse);
+}
