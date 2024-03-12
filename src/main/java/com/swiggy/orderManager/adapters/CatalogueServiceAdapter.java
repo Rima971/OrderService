@@ -2,6 +2,7 @@ package com.swiggy.orderManager.adapters;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.swiggy.orderManager.dtos.GenericHttpResponse;
+import com.swiggy.orderManager.dtos.MenuItemApiResponseDto;
 import com.swiggy.orderManager.dtos.MenuItemDto;
 import com.swiggy.orderManager.exceptions.InexistentMenuItemException;
 import com.swiggy.orderManager.exceptions.InvalidRestaurantIdException;
@@ -26,7 +27,7 @@ public class CatalogueServiceAdapter {
     private final RestTemplate restTemplate = new RestTemplate();
 
     private static final String RESTAURANTS_RESOURCE_URL = "http://localhost:8080/api/restaurants/";
-    private static final Function<Integer, String> MENU_ITEMS_RESOURCE_URL = (Integer restaurantId) -> "http://localhost:8080/api/restaurants/"+restaurantId+"/menu-items/";
+    private static final Function<Integer, String> MENU_ITEMS_RESOURCE_URL = (Integer restaurantId) -> RESTAURANTS_RESOURCE_URL + restaurantId + "/menu-items/";
 
     public void checkRestaurantExists(int restaurantId) {
         URI url = URI.create(RESTAURANTS_RESOURCE_URL+restaurantId);
@@ -45,12 +46,13 @@ public class CatalogueServiceAdapter {
         try{
             GenericHttpResponse response = this.restTemplate.getForObject(url, GenericHttpResponse.class);
             assert response != null;
-            return this.objectMapper.convertValue(response.getData(), MenuItemDto.class);
+            MenuItemApiResponseDto menuItem = this.objectMapper.convertValue(response.getData(), MenuItemApiResponseDto.class);
+            return new MenuItemDto(menuItem.getId(), menuItem.getRestaurant().getId(), menuItem.getPrice());
         } catch (HttpClientErrorException e){
             if (e.getStatusCode() == HttpStatus.CONFLICT){
-                if (Objects.equals(e.getMessage(), MENU_ITEM_NOT_FOUND)){
+                if (e.getMessage().contains(MENU_ITEM_NOT_FOUND)){
                     throw new InexistentMenuItemException();
-                } else if (Objects.equals(e.getMessage(), ITEM_NOT_OF_GIVEN_RESTAURANT.apply(new GroupedIds(itemId, restaurantId)))){
+                } else if (e.getMessage().contains(ITEM_NOT_OF_GIVEN_RESTAURANT.apply(new GroupedIds(itemId, restaurantId)))){
                     throw new ItemRestaurantConflictException(itemId, restaurantId);
                 }
                 throw e;

@@ -14,6 +14,11 @@ public class OrderTest {
     public void test_shouldThrowNoItemOrderedExceptionIfItemListIsEmpty(){
         assertThrows(NoItemOrderedException.class, ()->Order.create(TEST_CUSTOMER_ID, TEST_RESTAURANT_ID, new ArrayList<>()));
     }
+
+    @Test
+    public void test_shouldCreateACorrectMapOfItemIdToItsQuantityForAGivenListOfItems(){
+
+    }
     @Test
     public void test_shouldThrowItemRestaurantConflictIfAnyOfTheItemPassedDoesNotBelongToTheGivenRestaurant(){
 
