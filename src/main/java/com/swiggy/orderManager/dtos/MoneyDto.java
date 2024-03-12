@@ -19,8 +19,19 @@ public class MoneyDto {
     Currency currency;
 
     public MoneyDto(double amount, String currency) throws UnsupportedCurrencyException {
-        if (!Arrays.stream(Currency.values()).anyMatch(c-> c.name().equals(currency))) throw new UnsupportedCurrencyException();
         this.amount = amount;
-        this.currency = Currency.valueOf(currency);
+        try{
+            this.currency = Currency.valueOf(currency);
+        } catch (IllegalArgumentException e){
+            throw new UnsupportedCurrencyException();
+        }
+    }
+
+    public void setCurrency(String currency) throws UnsupportedCurrencyException {
+        try {
+            this.currency = Currency.valueOf(currency);
+        } catch (IllegalArgumentException e){
+            throw new UnsupportedCurrencyException();
+        }
     }
 }

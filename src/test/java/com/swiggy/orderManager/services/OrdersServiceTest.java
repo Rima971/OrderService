@@ -1,5 +1,6 @@
 package com.swiggy.orderManager.services;
 
+import com.swiggy.orderManager.adapters.AllocatorServiceAdapter;
 import com.swiggy.orderManager.adapters.CatalogueServiceAdapter;
 import com.swiggy.orderManager.dtos.ItemDto;
 import com.swiggy.orderManager.dtos.MenuItemDto;
@@ -7,6 +8,7 @@ import com.swiggy.orderManager.dtos.MoneyDto;
 import com.swiggy.orderManager.dtos.OrderRequestDto;
 import com.swiggy.orderManager.entities.Order;
 import com.swiggy.orderManager.enums.Currency;
+import com.swiggy.orderManager.repositories.OrderUpdatesDao;
 import com.swiggy.orderManager.repositories.OrdersDao;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -31,7 +33,13 @@ public class OrdersServiceTest {
     private CatalogueServiceAdapter mockedCatalogueServiceAdapter;
 
     @Mock
+    private AllocatorServiceAdapter mockedAllocatorServiceAdapter;
+
+    @Mock
     private OrdersDao mockedOrdersDao;
+
+    @Mock
+    private OrderUpdatesDao mockedOrderUpdatesDao;
 
     @InjectMocks
     private OrdersService ordersService;
@@ -40,15 +48,17 @@ public class OrdersServiceTest {
     public void setUp(){
         openMocks(this);
         Order.setCatalogueServiceAdapter(mockedCatalogueServiceAdapter);
+        Order.setAllocatorServiceAdapter(mockedAllocatorServiceAdapter);
     }
 
     @AfterEach
     public void cleanUp(){
         Order.setCatalogueServiceAdapter(new CatalogueServiceAdapter());
+        Order.setAllocatorServiceAdapter(new AllocatorServiceAdapter());
     }
 
     @Test
-    public void test_shouldCreateAnOrderSuccessfullyAndCheckForValidItems(){
+    public void test_shouldCreateAnOrderSuccessfullyAndCheckForValidItemsAndAllocateDeliveryAgent(){
         Order mockedOrder = mock(Order.class);
         MenuItemDto item = new MenuItemDto(TEST_MENU_ITEM_ID, TEST_RESTAURANT_ID, new MoneyDto(0, Currency.INR.name()));
         when(this.mockedOrdersDao.save(any(Order.class))).thenReturn(mockedOrder);
@@ -63,4 +73,6 @@ public class OrdersServiceTest {
         verify(this.mockedCatalogueServiceAdapter, times(1)).checkRestaurantExists(TEST_RESTAURANT_ID);
         verify(this.mockedCatalogueServiceAdapter, times(1)).fetchMenuItem(TEST_MENU_ITEM_ID, TEST_RESTAURANT_ID);
     }
+
+
 }

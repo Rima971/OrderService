@@ -72,8 +72,6 @@ public class Order {
         checkItemsBelongToGivenRestaurantAndCalculateNetPrice();
         obtainDeliveryLocation();
         this.status = OrderStatus.CREATED;
-
-        allocateDeliverer();
     }
 
     private void checkItemsBelongToGivenRestaurantAndCalculateNetPrice() throws ItemRestaurantConflictException, InvalidRestaurantIdException {
@@ -95,11 +93,8 @@ public class Order {
     }
 
 
-    private void allocateDeliverer(){
-        new Thread(()->{
-            this.allocatedDeliveryAgentId = ALLOCATOR_SERVICE_ADAPTER.allocate(this.deliveryLocationPincode).getId();
-            this.status = OrderStatus.ASSIGNED;
-        }).start();
+    public void allocateDeliverer(){
+        this.allocatedDeliveryAgentId = ALLOCATOR_SERVICE_ADAPTER.allocate(this.deliveryLocationPincode).getId();
     }
 
     public static Order create(int customerId, int restaurantId, List<ItemDto> items) throws ItemRestaurantConflictException, InvalidRestaurantIdException {
